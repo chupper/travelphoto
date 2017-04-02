@@ -1,0 +1,21 @@
+{{define "title"}}New Gallery{{end}}
+
+{{define "content"}}
+<h1>Create new Gallery</h1>
+
+<form action="/gallery" method="POST" role="form">
+    <legend>Create Gallery</legend>
+
+    <div class="form-group">
+        <label for="">Gallery Name</label>
+        <input type="text" class="form-control" name="name" id="name" placeholder="Name">
+    </div>
+
+    <div class="form-group">
+        <label for="">Description</label>
+        <input type="text" class="form-control" name="description" id="description" placeholder="Description">
+    </div>
+
+    <button type="submit" class="btn btn-primary">Create</button>
+</form>
+{{end}}

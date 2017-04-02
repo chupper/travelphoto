@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/chupper/travelphoto/controllers/gallery"
 	"github.com/chupper/travelphoto/controllers/home"
 
 	"github.com/gorilla/mux"
@@ -16,7 +17,9 @@ func main() {
 
 	// loading the routes
 	home.Load(r)
+	gallery.Load(r)
 
+	// start the server
 	srv := &http.Server{
 		Handler: r,
 		Addr:    "127.0.0.1:8000",

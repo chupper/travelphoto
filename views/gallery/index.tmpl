@@ -1,0 +1,33 @@
+{{define "title"}}Galleries{{end}}
+
+{{define "content"}}
+
+<h1>Galleries</h1>
+
+<p>Bro.... these are your Galleries</p>
+
+<a class="btn btn-primary btn-sm" href="/gallery/create" role="button">Create</a>
+
+<table class="table table-condensed table-hover">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Date</th>
+            <th>Edit</th>
+        </tr>
+    </thead>
+    <tbody>
+        {{ range . }}
+        <tr>
+            <td>{{ .Name }}</td>
+            <td>{{ .Description }}</td>
+            <td></td>
+            <td>
+            <a class="btn btn-primary btn-sm" href="/Gallery/{{ .ID }}" role="button">Edit</a>
+            </td>
+        </tr>
+        {{ end }}
+    </tbody>
+</table>
+{{end}}
