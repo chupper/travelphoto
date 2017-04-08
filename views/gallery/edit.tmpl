@@ -1,21 +1,47 @@
 {{define "title"}}Edit Gallery{{end}}
 
 {{define "content"}}
-<h1>Edit Gallery</h1>
+<h3>Edit Gallery</h3>
 
-<form action="/gallery" method="POST" role="form">
-    <legend>Edit Gallery</legend>
+<form action="/gallery/{{ .Gallery.ID }}" method="POST" role="form">
+
+    <input type="hidden" name="Id" id="Id" class="form-control" value="{{ .Gallery.ID }}">
 
     <div class="form-group">
         <label for="">Gallery Name</label>
-        <input type="text" class="form-control" name="name" id="name" placeholder="Name">
+        <input type="text" class="form-control" name="name" id="name" placeholder="Name" readonly="true" value="{{ .Gallery.Name }}">
     </div>
-
     <div class="form-group">
         <label for="">Description</label>
-        <input type="text" class="form-control" name="description" id="description" placeholder="Description">
+        <input type="text" class="form-control" name="description" id="description" placeholder="Description" value="{{ .Gallery.Description }}">
     </div>
 
     <button type="submit" class="btn btn-primary">Update</button>
 </form>
+
+<h3>Edit Pictures</h3>
+{{ range .Photos }}
+
+    <form action="/photo/.ID" method="POST" role="form">
+        <input type="hidden" name="Id" id="Id" class="form-control" value="{{ .ID }}">
+
+        <div class="form-group">
+            <label for="">Name</label>
+            <input type="text" class="form-control" name="name" id="name" placeholder="Name" readonly="true" value="{{ .Name }}">
+        </div>
+
+        <div class="form-group">
+            <label for="">Description</label>
+            <input type="text" class="form-control" name="description" id="description" placeholder="Description" value="{{ .Description }}">
+        </div>
+
+        <div class="form-group">
+            <label for="">Image</label>
+            <input type="file" class="form-control" name="description" id="description" placeholder="Description">
+        </div>
+    
+        <button type="submit" class="btn btn-primary">Update</button>
+    </form>
+    
+{{ end }}
 {{end}}
