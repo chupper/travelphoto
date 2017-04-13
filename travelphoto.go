@@ -7,6 +7,7 @@ import (
 
 	"github.com/chupper/travelphoto/controllers/gallery"
 	"github.com/chupper/travelphoto/controllers/home"
+	"github.com/chupper/travelphoto/controllers/photo"
 
 	"github.com/gorilla/mux"
 )
@@ -18,6 +19,7 @@ func main() {
 	// loading the routes
 	home.Load(r)
 	gallery.Load(r)
+	photo.Load(r)
 
 	// start the server
 	srv := &http.Server{

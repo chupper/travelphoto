@@ -75,3 +75,13 @@ func GetPhotos(db Connection, galleryID int) (*[]Photo, error) {
 
 	return &items, err
 }
+
+// UpdatePhoto updates the main photo
+func UpdatePhoto(db Connection, photoId int, photoBytes *[]byte) {
+
+	db.Exec(fmt.Sprintf(`
+		UPDATE %v SET
+			IMAGE = $1
+		WHERE ID = $2
+		`, table), photoBytes, photoId)
+}

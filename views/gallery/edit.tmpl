@@ -22,22 +22,22 @@
 <h3>Edit Pictures</h3>
 {{ range .Photos }}
 
-    <form action="/photo/.ID" method="POST" role="form">
-        <input type="hidden" name="Id" id="Id" class="form-control" value="{{ .ID }}">
+    <form action="/photo/{{ .ID }}" method="POST" role="form" enctype="multipart/form-data">
+        <input type="hidden" name="Id" id="Id{{ .ID }}" class="form-control" value="{{ .ID }}">
 
         <div class="form-group">
-            <label for="">Name</label>
-            <input type="text" class="form-control" name="name" id="name" placeholder="Name" readonly="true" value="{{ .Name }}">
+            <label for="name{{ .ID }}">Name</label>
+            <input type="text" class="form-control" name="name{{ .ID }}" id="name" placeholder="Name" readonly="true" value="{{ .Name }}">
         </div>
 
         <div class="form-group">
-            <label for="">Description</label>
-            <input type="text" class="form-control" name="description" id="description" placeholder="Description" value="{{ .Description }}">
+            <label for="description{{ .ID }}">Description</label>
+            <input type="text" class="form-control" name="description" id="description{{ .ID }}" placeholder="Description" value="{{ .Description }}">
         </div>
 
         <div class="form-group">
-            <label for="">Image</label>
-            <input type="file" class="form-control" name="description" id="description" placeholder="Description">
+            <label for="image{{ .ID }}">Image</label>
+            <input type="file" class="form-control" name="image" id="image{{ .ID }}" placeholder="Description">
         </div>
     
         <button type="submit" class="btn btn-primary">Update</button>
