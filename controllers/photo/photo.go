@@ -1,22 +1,20 @@
 package photo
 
 import (
-	"database/sql"
+	"bytes"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 
-	"log"
-
-	"bytes"
-
+	"github.com/chupper/travelphoto/controllers"
 	"github.com/chupper/travelphoto/models/photo"
 	"github.com/gorilla/mux"
 )
 
 // Load loads the routes
 func Load(r *mux.Router) {
-	r.HandleFunc("/galleryphoto/{galleryid:[0-9]+}/{photoname:[a-z0-9]}", servePhoto)
+	r.HandleFunc("/galleryphoto/{galleryid:[0-9]+}/{photoname:[A-Z|a-z|0-9|.|_]+}", servePhoto)
 	r.HandleFunc("/photo/{photoid:[0-9]+}", editPhoto)
 }
 
@@ -24,9 +22,9 @@ func editPhoto(w http.ResponseWriter, r *http.Request) {
 
 	log.Println("Updating Photo")
 
-	db, err := sql.Open("postgres", "user=postgres password=postgres dbname=testdb sslmode=disable")
+	db, err := controllers.DbConnection()
 	if err != nil {
-		log.Fatal("Connect fail: ", err)
+		return
 	}
 
 	var photoID int
@@ -49,7 +47,7 @@ func editPhoto(w http.ResponseWriter, r *http.Request) {
 		buff.ReadFrom(file)
 		fileBytes := buff.Bytes()
 
-		photo.UpdatePhoto(db, photoID, &fileBytes)
+		photo.UpdatePhoto(db, photoID, handler.Filename, &fileBytes)
 		http.Redirect(w, r, fmt.Sprint("/gallery"), 301)
 	} else {
 		log.Fatal("We'll crap...")
@@ -57,5 +55,26 @@ func editPhoto(w http.ResponseWriter, r *http.Request) {
 }
 
 func servePhoto(w http.ResponseWriter, r *http.Request) {
+	log.Println("Serving Photo")
 
+	db, err := controllers.DbConnection()
+	if err != nil {
+		return
+	}
+
+	if r.Method == "GET" {
+
+		galleryID, _ := strconv.Atoi(mux.Vars(r)["galleryid"])
+		photoName, _ := mux.Vars(r)["photoname"]
+		log.Println("Serving ", galleryID, " ", photoName)
+
+		photoBytes, err := photo.FetchPhoto(db, galleryID, photoName)
+		if err != nil {
+			log.Fatal("Error: ", err)
+		}
+
+		w.Header().Set("Content-Type", "image/jpeg")
+		w.Header().Set("Content-Length", strconv.Itoa(len(*photoBytes)))
+		w.Write(*photoBytes)
+	}
 }

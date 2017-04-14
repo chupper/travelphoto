@@ -15,7 +15,7 @@ func Load(r *mux.Router) {
 }
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
-	t, _ := template.ParseFiles("views/base.tmpl", "views/home/home.tmpl")
+	t, _ := template.ParseFiles("views/home/home.tmpl")
 	t.Execute(w, controllers.Page{
 		Title: "Home",
 	})

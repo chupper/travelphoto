@@ -27,8 +27,8 @@ type Connection interface {
 func Create(db Connection, name string, description string) int {
 	var id int
 	result := db.QueryRow(fmt.Sprintf(`
-		INSERT INTO %v (name, description)
-		VALUES ($1, $2)
+		INSERT INTO %v (name, description, show)
+		VALUES ($1, $2, true)
 		RETURNING ID
 		`, table), name, description)
 	result.Scan(&id)

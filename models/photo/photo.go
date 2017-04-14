@@ -48,7 +48,8 @@ func GetPhotos(db Connection, galleryID int) (*[]Photo, error) {
 		SELECT
 			ID,
 			NAME,
-			DESCRIPTION
+			DESCRIPTION,
+			FILENAME
 		FROM %v
 		WHERE GALLERYID = $1
 		`, table), galleryID)
@@ -61,12 +62,13 @@ func GetPhotos(db Connection, galleryID int) (*[]Photo, error) {
 	var items []Photo
 	for results.Next() {
 		var id int
-		var name, description string
-		err = results.Scan(&id, &name, &description)
+		var name, description, fileName string
+		err = results.Scan(&id, &name, &description, &fileName)
 
 		gallery := Photo{
 			ID:          id,
 			Name:        name,
+			FileName:    fileName,
 			Description: description,
 		}
 
@@ -77,11 +79,38 @@ func GetPhotos(db Connection, galleryID int) (*[]Photo, error) {
 }
 
 // UpdatePhoto updates the main photo
-func UpdatePhoto(db Connection, photoId int, photoBytes *[]byte) {
-
+func UpdatePhoto(db Connection, photoID int, fileName string, photoBytes *[]byte) {
+	log.Println(fileName, photoID)
 	db.Exec(fmt.Sprintf(`
 		UPDATE %v SET
-			IMAGE = $1
-		WHERE ID = $2
-		`, table), photoBytes, photoId)
+			IMAGE = $1,
+			FILENAME = $2
+		WHERE ID = $3
+		`, table), photoBytes, fileName, photoID)
+}
+
+// FetchPhoto the photo bytes
+func FetchPhoto(db Connection, galleryID int, photoName string) (*[]byte, error) {
+
+	results, err := db.Query(fmt.Sprintf(`
+		SELECT
+			IMAGE
+		FROM %v 
+		WHERE
+			GalleryID = $1 AND
+			FILENAME = $2
+	`, table), galleryID, photoName)
+
+	if err != nil {
+		log.Fatal("Error retrieving item")
+		return nil, err
+	}
+
+	results.Next()
+	var photo []byte
+	if err = results.Scan(&photo); err != nil {
+		return nil, err
+	}
+
+	return &photo, nil
 }

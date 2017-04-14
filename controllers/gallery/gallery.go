@@ -25,7 +25,7 @@ func Load(r *mux.Router) {
 
 func galleryHandler(w http.ResponseWriter, r *http.Request) {
 
-	db, err := sql.Open("postgres", "user=postgres password=postgres dbname=testdb sslmode=disable")
+	db, err := controllers.DbConnection()
 	if err != nil {
 		log.Fatal("Connect fail: ", err)
 	}
@@ -56,9 +56,8 @@ func galleryHandler(w http.ResponseWriter, r *http.Request) {
 		log.Println(galleryID)
 
 		// create the photos for the gallery
-		for i := 0; i < len(galleryName); i++ {
-			log.Println("Creating photo ", i+1)
-			photo.Create(db, "picture", "", galleryID)
+		for i := 1; i <= len(galleryName); i++ {
+			photo.Create(db, fmt.Sprintf("picture %v", i), "", galleryID)
 		}
 
 		// after successful create we redirect to the galleries

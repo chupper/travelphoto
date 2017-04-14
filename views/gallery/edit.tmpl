@@ -27,12 +27,17 @@
 
         <div class="form-group">
             <label for="name{{ .ID }}">Name</label>
-            <input type="text" class="form-control" name="name{{ .ID }}" id="name" placeholder="Name" readonly="true" value="{{ .Name }}">
+            <input type="text" class="form-control" name="name" id="name{{ .ID }}" placeholder="Name" readonly="true" value="{{ .Name }}">
         </div>
 
         <div class="form-group">
             <label for="description{{ .ID }}">Description</label>
             <input type="text" class="form-control" name="description" id="description{{ .ID }}" placeholder="Description" value="{{ .Description }}">
+        </div>
+
+        <div class="form-group">
+            <label for="filename{{ .FileName }}">FileName</label>
+            <input type="text" class="form-control" name="filename" id="filename{{ .FileName }}" placeholder="Name" readonly="true" value="{{ .FileName }}">
         </div>
 
         <div class="form-group">
