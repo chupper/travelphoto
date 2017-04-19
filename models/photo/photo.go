@@ -52,6 +52,7 @@ func GetPhotos(db Connection, galleryID int) (*[]Photo, error) {
 			FILENAME
 		FROM %v
 		WHERE GALLERYID = $1
+		ORDER BY ID
 		`, table), galleryID)
 
 	if err != nil {
@@ -80,7 +81,6 @@ func GetPhotos(db Connection, galleryID int) (*[]Photo, error) {
 
 // UpdatePhoto updates the main photo
 func UpdatePhoto(db Connection, photoID int, fileName string, photoBytes *[]byte) {
-	log.Println(fileName, photoID)
 	db.Exec(fmt.Sprintf(`
 		UPDATE %v SET
 			IMAGE = $1,
@@ -89,17 +89,26 @@ func UpdatePhoto(db Connection, photoID int, fileName string, photoBytes *[]byte
 		`, table), photoBytes, fileName, photoID)
 }
 
+// UpdateThumb updates the thumbnail
+func UpdateThumb(db Connection, photoID int, photoBytes *[]byte) {
+	db.Exec(fmt.Sprintf(`
+		UPDATE %v SET
+			Thumb = $1
+		WHERE ID = $2
+		`, table), photoBytes, photoID)
+}
+
 // FetchPhoto the photo bytes
-func FetchPhoto(db Connection, galleryID int, photoName string) (*[]byte, error) {
+func FetchPhoto(db Connection, photoID int, photoName string) (*[]byte, error) {
 
 	results, err := db.Query(fmt.Sprintf(`
 		SELECT
 			IMAGE
 		FROM %v 
 		WHERE
-			GalleryID = $1 AND
+			ID = $1 AND
 			FILENAME = $2
-	`, table), galleryID, photoName)
+	`, table), photoID, photoName)
 
 	if err != nil {
 		log.Fatal("Error retrieving item")
@@ -113,4 +122,30 @@ func FetchPhoto(db Connection, galleryID int, photoName string) (*[]byte, error)
 	}
 
 	return &photo, nil
+}
+
+// FetchThumb serve the thumbnail
+func FetchThumb(db Connection, photoID int, photoName string) (*[]byte, error) {
+
+	results, err := db.Query(fmt.Sprintf(`
+		SELECT
+			THUMB
+		FROM %v 
+		WHERE
+			ID = $1 AND
+			FILENAME = $2
+	`, table), photoID, photoName)
+
+	if err != nil {
+		log.Fatal("Error retrieving item")
+		return nil, err
+	}
+
+	results.Next()
+	var thumb []byte
+	if err = results.Scan(&thumb); err != nil {
+		return nil, err
+	}
+
+	return &thumb, nil
 }

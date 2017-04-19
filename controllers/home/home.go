@@ -15,6 +15,14 @@ func Load(r *mux.Router) {
 }
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
+
+	// if db, err := controllers.DbConnection(); err != nil {
+	// 	log.Fatal("Error Initialising Database ", err)
+	// 	return
+	// }
+
+	// galleries := gallery.Select(db)
+
 	t, _ := template.ParseFiles("views/home/home.tmpl")
 	t.Execute(w, controllers.Page{
 		Title: "Home",

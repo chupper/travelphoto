@@ -30,5 +30,5 @@ func main() {
 		ReadTimeout:  15 * time.Second,
 	}
 
-	log.Fatal(srv.ListenAndServe())
+	log.Println(srv.ListenAndServe())
 }

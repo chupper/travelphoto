@@ -7,7 +7,7 @@ import (
 	_ "github.com/lib/pq"
 )
 
-//Page is the base type for the views
+//Page is the base ttype for the views
 type Page struct {
 	Title string
 	Body  []byte

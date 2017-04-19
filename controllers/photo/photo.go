@@ -14,7 +14,8 @@ import (
 
 // Load loads the routes
 func Load(r *mux.Router) {
-	r.HandleFunc("/galleryphoto/{galleryid:[0-9]+}/{photoname:[A-Z|a-z|0-9|.|_]+}", servePhoto)
+	r.HandleFunc("/galleryphoto/{photoid:[0-9]+}/{photoname:[A-Z|a-z|0-9|.|_]+}", servePhoto)
+	r.HandleFunc("/gallerythumb/{photoid:[0-9]+}/{photoname:[A-Z|a-z|0-9|.|_]+}", serveThumbnail)
 	r.HandleFunc("/photo/{photoid:[0-9]+}", editPhoto)
 }
 
@@ -35,23 +36,45 @@ func editPhoto(w http.ResponseWriter, r *http.Request) {
 
 		// try for the update
 		r.ParseMultipartForm(32 << 20)
-		file, handler, err := r.FormFile("image")
 
-		if err != nil {
-			log.Fatal("Not good, we couldn't read the file", handler.Filename, handler.Header)
-			return
+		// update photo if exists
+		fileBytes, fileName, _ := readImage(r, "image")
+		if fileBytes != nil {
+			photo.UpdatePhoto(db, photoID, fileName, &fileBytes)
 		}
 
-		defer file.Close()
-		var buff bytes.Buffer
-		buff.ReadFrom(file)
-		fileBytes := buff.Bytes()
+		// update thumbnail
+		thumbfileBytes, _, _ := readImage(r, "thumb")
+		if thumbfileBytes != nil {
+			photo.UpdateThumb(db, photoID, &thumbfileBytes)
+		}
 
-		photo.UpdatePhoto(db, photoID, handler.Filename, &fileBytes)
 		http.Redirect(w, r, fmt.Sprint("/gallery"), 301)
 	} else {
 		log.Fatal("We'll crap...")
 	}
+}
+
+func readImage(r *http.Request, name string) ([]byte, string, error) {
+
+	val, ok := r.Form[name]
+	if ok || len(val) != 0 {
+		return nil, "", nil
+	}
+
+	file, handler, err := r.FormFile(name)
+
+	if err != nil {
+		log.Fatal("Error reading file: ", name, " ", err)
+		return nil, "", nil
+	}
+
+	defer file.Close()
+	var buff bytes.Buffer
+	buff.ReadFrom(file)
+	fileBytes := buff.Bytes()
+
+	return fileBytes, handler.Filename, nil
 }
 
 func servePhoto(w http.ResponseWriter, r *http.Request) {
@@ -64,11 +87,36 @@ func servePhoto(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == "GET" {
 
-		galleryID, _ := strconv.Atoi(mux.Vars(r)["galleryid"])
+		photoID, _ := strconv.Atoi(mux.Vars(r)["photoid"])
 		photoName, _ := mux.Vars(r)["photoname"]
-		log.Println("Serving ", galleryID, " ", photoName)
+		log.Println("Serving ", photoID, " ", photoName)
 
-		photoBytes, err := photo.FetchPhoto(db, galleryID, photoName)
+		photoBytes, err := photo.FetchPhoto(db, photoID, photoName)
+		if err != nil {
+			log.Fatal("Error: ", err)
+		}
+
+		w.Header().Set("Content-Type", "image/jpeg")
+		w.Header().Set("Content-Length", strconv.Itoa(len(*photoBytes)))
+		w.Write(*photoBytes)
+	}
+}
+
+func serveThumbnail(w http.ResponseWriter, r *http.Request) {
+	log.Println("Serving Thumb")
+
+	db, err := controllers.DbConnection()
+	if err != nil {
+		return
+	}
+
+	if r.Method == "GET" {
+
+		photoID, _ := strconv.Atoi(mux.Vars(r)["photoid"])
+		photoName, _ := mux.Vars(r)["photoname"]
+		log.Println("Serving ", photoID, " ", photoName)
+
+		photoBytes, err := photo.FetchThumb(db, photoID, photoName)
 		if err != nil {
 			log.Fatal("Error: ", err)
 		}
