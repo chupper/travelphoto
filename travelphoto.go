@@ -21,6 +21,10 @@ func main() {
 	gallery.Load(r)
 	photo.Load(r)
 
+	// serve the static folder
+	s := http.StripPrefix("/static/", http.FileServer(http.Dir("./static/")))
+	r.PathPrefix("/static/").Handler(s)
+
 	// start the server
 	srv := &http.Server{
 		Handler: r,

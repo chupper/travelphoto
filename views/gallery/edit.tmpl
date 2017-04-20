@@ -23,13 +23,24 @@
 {{ range .Photos }}
     <div class="col-sm-1">
         <label>Image<label>
+        
+        {{ if .FileName  }}
         <img src="/galleryphoto/{{ .ID }}/{{ .FileName }}" width="100%" style="max-height: 60px">
+        {{ else }}
+        <img src="/static/images/none.jpg" width="100%"  style="max-height: 60px">
+        {{ end }}
+
         <label>Thumb</label>
-        <img src="/gallerythumb/{{ .ID }}/{{ .FileName }}" width="100%"  style="max-height: 60px">
+        {{ if .ThumbFileName  }}
+        <img src="/gallerythumb/{{ .ID }}/{{ .ThumbFileName }}" width="100%"  style="max-height: 60px">
+        {{ else }}
+        <img src="/static/images/none.jpg" width="100%"  style="max-height: 60px">
+        {{ end }}
     </div>
     <div class="col-sm-3">
     <form action="/photo/{{ .ID }}" method="POST" role="form" enctype="multipart/form-data">
         <input type="hidden" name="Id" id="Id{{ .ID }}" class="form-control" value="{{ .ID }}">
+        <input type="hidden" name="galleryid" id="galleryid{{ .ID }}" class="form-control" value="{{ .GalleryID }}">
 
         <div class="form-group">
             <label for="name{{ .ID }}">Name</label>
@@ -39,11 +50,6 @@
         <div class="form-group">
             <label for="description{{ .ID }}">Description</label>
             <input type="text" class="form-control" name="description" id="description{{ .ID }}" placeholder="Description" value="{{ .Description }}">
-        </div>
-
-        <div class="form-group">
-            <label for="filename{{ .FileName }}">FileName</label>
-            <input type="text" class="form-control" name="filename" id="filename{{ .FileName }}" placeholder="Name" readonly="true" value="{{ .FileName }}">
         </div>
 
         <div class="form-group">

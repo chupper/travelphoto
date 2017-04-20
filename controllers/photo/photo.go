@@ -36,6 +36,7 @@ func editPhoto(w http.ResponseWriter, r *http.Request) {
 
 		// try for the update
 		r.ParseMultipartForm(32 << 20)
+		galleryID := r.FormValue("galleryid")
 
 		// update photo if exists
 		fileBytes, fileName, _ := readImage(r, "image")
@@ -44,12 +45,12 @@ func editPhoto(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// update thumbnail
-		thumbfileBytes, _, _ := readImage(r, "thumb")
-		if thumbfileBytes != nil {
-			photo.UpdateThumb(db, photoID, &thumbfileBytes)
+		fileBytes, fileName, _ = readImage(r, "thumb")
+		if fileBytes != nil {
+			photo.UpdateThumb(db, photoID, fileName, &fileBytes)
 		}
 
-		http.Redirect(w, r, fmt.Sprint("/gallery"), 301)
+		http.Redirect(w, r, fmt.Sprint("/gallery/", galleryID), 301)
 	} else {
 		log.Fatal("We'll crap...")
 	}

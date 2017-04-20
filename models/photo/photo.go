@@ -8,13 +8,15 @@ import (
 
 // Photo image in the gallery
 type Photo struct {
-	ID          int
-	Name        string
-	FileName    string
-	Description string
-	Rank        int
-	FullSize    []byte
-	Thumbnail   []byte
+	ID            int
+	GalleryID     int
+	Name          string
+	FileName      string
+	ThumbFileName string
+	Description   string
+	Rank          int
+	FullSize      []byte
+	Thumbnail     []byte
 }
 
 const (
@@ -32,8 +34,8 @@ type Connection interface {
 func Create(db Connection, name string, description string, galleryID int) int {
 	var id int
 	result := db.QueryRow(fmt.Sprintf(`
-		INSERT INTO %v (name, description, galleryId)
-		VALUES ($1, $2, $3)
+		INSERT INTO %v (name, description, galleryId, thumbfilename, filename)
+		VALUES ($1, $2, $3, '', '')
 		RETURNING ID
 		`, table), name, description, galleryID)
 	result.Scan(&id)
@@ -47,9 +49,11 @@ func GetPhotos(db Connection, galleryID int) (*[]Photo, error) {
 	results, err := db.Query(fmt.Sprintf(`
 		SELECT
 			ID,
+			GALLERYID,
 			NAME,
 			DESCRIPTION,
-			FILENAME
+			FILENAME,
+			THUMBFILENAME
 		FROM %v
 		WHERE GALLERYID = $1
 		ORDER BY ID
@@ -62,15 +66,18 @@ func GetPhotos(db Connection, galleryID int) (*[]Photo, error) {
 	// not sure if this is a golang way?
 	var items []Photo
 	for results.Next() {
-		var id int
-		var name, description, fileName string
-		err = results.Scan(&id, &name, &description, &fileName)
+		var id, galleryID int
+		var name, description, fileName, thumbfilename string
+		err = results.Scan(&id, &galleryID, &name, &description, &fileName, &thumbfilename)
 
+		log.Println(name, "- thumb: ", thumbfilename, "file: ", fileName)
 		gallery := Photo{
-			ID:          id,
-			Name:        name,
-			FileName:    fileName,
-			Description: description,
+			ID:            id,
+			GalleryID:     galleryID,
+			Name:          name,
+			FileName:      fileName,
+			ThumbFileName: thumbfilename,
+			Description:   description,
 		}
 
 		items = append(items, gallery)
@@ -90,12 +97,13 @@ func UpdatePhoto(db Connection, photoID int, fileName string, photoBytes *[]byte
 }
 
 // UpdateThumb updates the thumbnail
-func UpdateThumb(db Connection, photoID int, photoBytes *[]byte) {
+func UpdateThumb(db Connection, photoID int, fileName string, photoBytes *[]byte) {
 	db.Exec(fmt.Sprintf(`
 		UPDATE %v SET
-			Thumb = $1
-		WHERE ID = $2
-		`, table), photoBytes, photoID)
+			Thumb = $1,
+			ThumbFileName = $2
+		WHERE ID = $3
+		`, table), photoBytes, fileName, photoID)
 }
 
 // FetchPhoto the photo bytes
@@ -133,7 +141,7 @@ func FetchThumb(db Connection, photoID int, photoName string) (*[]byte, error) {
 		FROM %v 
 		WHERE
 			ID = $1 AND
-			FILENAME = $2
+			THUMBFILENAME = $2
 	`, table), photoID, photoName)
 
 	if err != nil {

@@ -57,7 +57,7 @@ func galleryHandler(w http.ResponseWriter, r *http.Request) {
 
 		// create the photos for the gallery
 		for i := 1; i <= len(galleryName); i++ {
-			photo.Create(db, fmt.Sprintf("picture %v", i), "", galleryID)
+			photo.Create(db, fmt.Sprintf("Photo %v", i), "", galleryID)
 		}
 
 		// after successful create we redirect to the galleries
