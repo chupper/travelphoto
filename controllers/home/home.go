@@ -2,9 +2,12 @@ package home
 
 import (
 	"html/template"
+	"log"
 	"net/http"
 
 	"github.com/chupper/travelphoto/controllers"
+	"github.com/chupper/travelphoto/models/gallery"
+	"github.com/chupper/travelphoto/models/photo"
 
 	"github.com/gorilla/mux"
 )
@@ -14,17 +17,26 @@ func Load(r *mux.Router) {
 	r.HandleFunc("/", homeHandler)
 }
 
+type galleryView struct {
+	Gallery gallery.Gallery
+	Photos  []photo.Photo
+}
+
+type homePage struct {
+	Galleries []galleryView
+}
+
 func homeHandler(w http.ResponseWriter, r *http.Request) {
 
-	// if db, err := controllers.DbConnection(); err != nil {
-	// 	log.Fatal("Error Initialising Database ", err)
-	// 	return
-	// }
+	db, err := controllers.DbConnection()
+	if err != nil {
+		log.Fatal("Error Initialising Database ", err)
+		return
+	}
 
-	// galleries := gallery.Select(db)
+	galleries, _ := gallery.SelectAll(db)
+	log.Println("maybe?", galleries)
 
 	t, _ := template.ParseFiles("views/home/home.tmpl")
-	t.Execute(w, controllers.Page{
-		Title: "Home",
-	})
+	t.Execute(w, galleries)
 }

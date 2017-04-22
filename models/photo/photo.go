@@ -70,7 +70,6 @@ func GetPhotos(db Connection, galleryID int) (*[]Photo, error) {
 		var name, description, fileName, thumbfilename string
 		err = results.Scan(&id, &galleryID, &name, &description, &fileName, &thumbfilename)
 
-		log.Println(name, "- thumb: ", thumbfilename, "file: ", fileName)
 		gallery := Photo{
 			ID:            id,
 			GalleryID:     galleryID,

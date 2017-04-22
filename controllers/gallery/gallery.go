@@ -1,7 +1,6 @@
 package gallery
 
 import (
-	"database/sql"
 	"fmt"
 	"html/template"
 	"log"
@@ -53,7 +52,6 @@ func galleryHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Fatal("Create fail: ", err)
 		}
-		log.Println(galleryID)
 
 		// create the photos for the gallery
 		for i := 1; i <= len(galleryName); i++ {
@@ -72,7 +70,7 @@ type editGallery struct {
 
 func editGalleryHandler(w http.ResponseWriter, r *http.Request) {
 
-	db, err := sql.Open("postgres", "user=postgres password=postgres dbname=testdb sslmode=disable")
+	db, err := controllers.DbConnection()
 	if err != nil {
 		log.Fatal("Connect fail: ", err)
 	}

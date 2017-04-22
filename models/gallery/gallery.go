@@ -3,6 +3,8 @@ package gallery
 import (
 	"database/sql"
 	"fmt"
+
+	"github.com/chupper/travelphoto/models/photo"
 )
 
 const (
@@ -14,6 +16,7 @@ type Gallery struct {
 	ID          int
 	Name        string
 	Description string
+	Photos      []photo.Photo
 }
 
 // Connection is an interface for making the queries
@@ -60,6 +63,66 @@ func Select(db Connection) (*[]Gallery, error) {
 			Name:        name,
 			Description: description,
 		}
+
+		items = append(items, gallery)
+	}
+
+	return &items, err
+}
+
+// SelectAll Query for the homepage
+func SelectAll(db Connection) (*[]Gallery, error) {
+
+	result, err := db.Query(fmt.Sprintf(`
+		SELECT 
+			g.ID, 
+			g.NAME,
+			g.DESCRIPTION,
+			p.ID,
+			p.NAME,
+			p.FILENAME,
+			p.THUMBFILENAME
+		FROM %v g
+		INNER JOIN PHOTO p on (g.ID = p.GALLERYID)
+	`, table))
+
+	if err != nil {
+		return nil, err
+	}
+
+	// not sure if this is a golang way?
+	var items []Gallery
+	morePhoto := result.Next()
+	for morePhoto {
+		var id, photoID int
+		var name, description, photoName, photoFileName, photoThumbName string
+		err = result.Scan(&id, &name, &description, &photoID, &photoName, &photoFileName, &photoThumbName)
+
+		gallery := Gallery{
+			ID:          id,
+			Name:        name,
+			Description: description,
+		}
+
+		photos := make([]photo.Photo, 0)
+		for i := 0; i < len(name); i++ {
+			ph := photo.Photo{
+				ID:            photoID,
+				Name:          photoName,
+				FileName:      photoFileName,
+				ThumbFileName: photoThumbName,
+			}
+			photos = append(photos, ph)
+
+			// append and scan next
+			morePhoto = result.Next()
+			if morePhoto {
+				err = result.Scan(&id, &name, &description, &photoID, &photoName, &photoFileName, &photoThumbName)
+			}
+		}
+
+		// assign the photos
+		gallery.Photos = photos
 
 		items = append(items, gallery)
 	}
