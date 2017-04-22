@@ -16,6 +16,12 @@
      <div class="container">
        <h1>Wu Travel Images</h1>
        <p>Stuff</p>  
+       {{ range . }}
+       <h2>{{ .Name }}</h2>
+       {{ range .Photos }}
+       <p>{{ .FileName }} {{ .Name }}</p>
+       {{ end }}
+       {{ end }}
     </div>
 </body>
 </html>
