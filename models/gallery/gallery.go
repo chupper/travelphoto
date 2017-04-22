@@ -84,6 +84,7 @@ func SelectAll(db Connection) (*[]Gallery, error) {
 			p.THUMBFILENAME
 		FROM %v g
 		INNER JOIN PHOTO p on (g.ID = p.GALLERYID)
+		ORDER BY g.ID
 	`, table))
 
 	if err != nil {
@@ -105,7 +106,8 @@ func SelectAll(db Connection) (*[]Gallery, error) {
 		}
 
 		photos := make([]photo.Photo, 0)
-		for i := 0; i < len(name); i++ {
+		currentGalleryID := id
+		for currentGalleryID == id {
 			ph := photo.Photo{
 				ID:            photoID,
 				Name:          photoName,
@@ -118,6 +120,11 @@ func SelectAll(db Connection) (*[]Gallery, error) {
 			morePhoto = result.Next()
 			if morePhoto {
 				err = result.Scan(&id, &name, &description, &photoID, &photoName, &photoFileName, &photoThumbName)
+			}
+
+			// final exit clause
+			if !morePhoto {
+				break
 			}
 		}
 

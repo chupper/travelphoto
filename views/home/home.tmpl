@@ -14,13 +14,20 @@
 </head>
 <body>
      <div class="container">
-       <h1>Wu Travel Images</h1>
-       <p>Stuff</p>  
+       <div class="row">
+        <h2>Wu Travel Images</h2>
+       </div>
        {{ range . }}
-       <h2>{{ .Name }}</h2>
-       {{ range .Photos }}
-       <p>{{ .FileName }} {{ .Name }}</p>
-       {{ end }}
+       <div class="row">
+        <h2>{{ .Name }}</h2>
+        {{ range .Photos }}
+        <div class="col-xs-3">
+            <a href="#" class="thumbnail">
+            <img src="/gallerythumb/{{ .ID }}/{{ .ThumbFileName }}" alt="{{.Name}}">
+            </a>
+        </div>    
+        {{ end }}
+       </div>
        {{ end }}
     </div>
 </body>
