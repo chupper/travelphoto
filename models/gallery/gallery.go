@@ -46,6 +46,7 @@ func Select(db Connection) (*[]Gallery, error) {
 		SELECT ID, NAME, DESCRIPTION
 		FROM %v
 	`, table))
+	defer result.Close()
 
 	if err != nil {
 		return nil, err
@@ -86,6 +87,7 @@ func SelectAll(db Connection) (*[]Gallery, error) {
 		INNER JOIN PHOTO p on (g.ID = p.GALLERYID)
 		ORDER BY g.ID
 	`, table))
+	defer result.Close()
 
 	if err != nil {
 		return nil, err
@@ -145,6 +147,7 @@ func Get(db Connection, galleryID int) (*Gallery, error) {
 		FROM %v
 		WHERE ID = $1
 	`, table), galleryID)
+	defer result.Close()
 
 	for result.Next() {
 		var id int

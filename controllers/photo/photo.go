@@ -79,7 +79,6 @@ func readImage(r *http.Request, name string) ([]byte, string, error) {
 }
 
 func servePhoto(w http.ResponseWriter, r *http.Request) {
-	log.Println("Serving Photo")
 
 	db, err := controllers.DbConnection()
 	if err != nil {
@@ -104,7 +103,6 @@ func servePhoto(w http.ResponseWriter, r *http.Request) {
 }
 
 func serveThumbnail(w http.ResponseWriter, r *http.Request) {
-	log.Println("Serving Thumb")
 
 	db, err := controllers.DbConnection()
 	if err != nil {

@@ -35,7 +35,6 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	galleries, _ := gallery.SelectAll(db)
-	log.Println("maybe?", galleries)
 
 	t, _ := template.ParseFiles("views/home/home.tmpl")
 	t.Execute(w, galleries)

@@ -58,6 +58,7 @@ func GetPhotos(db Connection, galleryID int) (*[]Photo, error) {
 		WHERE GALLERYID = $1
 		ORDER BY ID
 		`, table), galleryID)
+	defer results.Close()
 
 	if err != nil {
 		log.Println(err)
@@ -116,9 +117,10 @@ func FetchPhoto(db Connection, photoID int, photoName string) (*[]byte, error) {
 			ID = $1 AND
 			FILENAME = $2
 	`, table), photoID, photoName)
+	defer results.Close()
 
 	if err != nil {
-		log.Fatal("Error retrieving item")
+		log.Fatal("Error retrieving item:", err)
 		return nil, err
 	}
 
@@ -142,9 +144,10 @@ func FetchThumb(db Connection, photoID int, photoName string) (*[]byte, error) {
 			ID = $1 AND
 			THUMBFILENAME = $2
 	`, table), photoID, photoName)
+	defer results.Close()
 
 	if err != nil {
-		log.Fatal("Error retrieving item")
+		log.Fatal("Error retrieving item", err)
 		return nil, err
 	}
 
