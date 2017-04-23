@@ -16,20 +16,18 @@ type Page struct {
 var db *sql.DB
 
 // DbConnection get the connection
-func DbConnection() (*sql.DB, error) {
+func DbConnection() *sql.DB {
 
-	// If already exists we are all good
-	if db != nil {
-		return db, nil
+	// if doesn't exist we open the new one
+	if db == nil {
+		// Opens the connection
+		log.Println("Creating new DB Connection")
+		con, err := sql.Open("postgres", "user=postgres password=postgres dbname=testdb sslmode=disable")
+		if err != nil {
+			log.Fatal("Connect fail: ", err)
+		}
+		db = con
 	}
 
-	// Opens the connection
-	log.Println("Creating new DB Connection")
-	con, err := sql.Open("postgres", "user=postgres password=postgres dbname=testdb sslmode=disable")
-	if err != nil {
-		log.Fatal("Connect fail: ", err)
-	}
-	db = con
-	return con, err
-
+	return db
 }

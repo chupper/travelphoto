@@ -14,59 +14,44 @@ import (
 
 // Load loads the routes
 func Load(r *mux.Router) {
-	r.HandleFunc("/galleryphoto/{photoid:[0-9]+}/{photoname:[A-Z|a-z|0-9|.|_]+}", servePhoto)
-	r.HandleFunc("/gallerythumb/{photoid:[0-9]+}/{photoname:[A-Z|a-z|0-9|.|_]+}", serveThumbnail)
-	r.HandleFunc("/photo/{photoid:[0-9]+}", editPhoto)
+	r.HandleFunc("/galleryphoto/{photoid:[0-9]+}/{photoname:[A-Z|a-z|0-9|.|_]+}", servePhoto).Methods(http.MethodGet)
+	r.HandleFunc("/gallerythumb/{photoid:[0-9]+}/{photoname:[A-Z|a-z|0-9|.|_]+}", serveThumbnail).Methods(http.MethodGet)
+	r.HandleFunc("/photo/{photoid:[0-9]+}", editPhoto).Methods(http.MethodPost)
 }
 
 func editPhoto(w http.ResponseWriter, r *http.Request) {
 
-	log.Println("Updating Photo")
-
-	db, err := controllers.DbConnection()
-	if err != nil {
-		return
-	}
+	db := controllers.DbConnection()
 
 	var photoID int
 	photoID, _ = strconv.Atoi(mux.Vars(r)["photoid"])
 
 	// uploading new photo
-	if r.Method == "POST" {
+	// try for the update
+	r.ParseMultipartForm(32 << 20)
+	galleryID := r.FormValue("galleryid")
 
-		// try for the update
-		r.ParseMultipartForm(32 << 20)
-		galleryID := r.FormValue("galleryid")
-
-		// update photo if exists
-		fileBytes, fileName, _ := readImage(r, "image")
-		if fileBytes != nil {
-			photo.UpdatePhoto(db, photoID, fileName, &fileBytes)
-		}
-
-		// update thumbnail
-		fileBytes, fileName, _ = readImage(r, "thumb")
-		if fileBytes != nil {
-			photo.UpdateThumb(db, photoID, fileName, &fileBytes)
-		}
-
-		http.Redirect(w, r, fmt.Sprint("/gallery/", galleryID), 301)
-	} else {
-		log.Fatal("We'll crap...")
+	// update photo if exists
+	fileBytes, fileName, _ := readImage(r, "image")
+	if fileBytes != nil {
+		photo.UpdatePhoto(db, photoID, fileName, &fileBytes)
 	}
+
+	// update thumbnail
+	fileBytes, fileName, _ = readImage(r, "thumb")
+	if fileBytes != nil {
+		photo.UpdateThumb(db, photoID, fileName, &fileBytes)
+	}
+
+	http.Redirect(w, r, fmt.Sprint("/gallery/", galleryID), 301)
 }
 
 func readImage(r *http.Request, name string) ([]byte, string, error) {
 
-	val, ok := r.Form[name]
-	if ok || len(val) != 0 {
-		return nil, "", nil
-	}
-
 	file, handler, err := r.FormFile(name)
 
 	if err != nil {
-		log.Fatal("Error reading file: ", name, " ", err)
+		log.Println("File not available.")
 		return nil, "", nil
 	}
 
@@ -80,48 +65,38 @@ func readImage(r *http.Request, name string) ([]byte, string, error) {
 
 func servePhoto(w http.ResponseWriter, r *http.Request) {
 
-	db, err := controllers.DbConnection()
+	db := controllers.DbConnection()
+
+	photoID, _ := strconv.Atoi(mux.Vars(r)["photoid"])
+	photoName, _ := mux.Vars(r)["photoname"]
+
+	photoBytes, err := photo.FetchPhoto(db, photoID, photoName)
 	if err != nil {
+		log.Println("Error Fetching Photo: ", err)
+		http.NotFound(w, r)
 		return
 	}
 
-	if r.Method == "GET" {
-
-		photoID, _ := strconv.Atoi(mux.Vars(r)["photoid"])
-		photoName, _ := mux.Vars(r)["photoname"]
-		log.Println("Serving ", photoID, " ", photoName)
-
-		photoBytes, err := photo.FetchPhoto(db, photoID, photoName)
-		if err != nil {
-			log.Fatal("Error: ", err)
-		}
-
-		w.Header().Set("Content-Type", "image/jpeg")
-		w.Header().Set("Content-Length", strconv.Itoa(len(*photoBytes)))
-		w.Write(*photoBytes)
-	}
+	w.Header().Set("Content-Type", "image/jpeg")
+	w.Header().Set("Content-Length", strconv.Itoa(len(*photoBytes)))
+	w.Write(*photoBytes)
 }
 
 func serveThumbnail(w http.ResponseWriter, r *http.Request) {
 
-	db, err := controllers.DbConnection()
+	db := controllers.DbConnection()
+
+	photoID, _ := strconv.Atoi(mux.Vars(r)["photoid"])
+	photoName, _ := mux.Vars(r)["photoname"]
+
+	photoBytes, err := photo.FetchThumb(db, photoID, photoName)
 	if err != nil {
+		log.Println("Error Fetching Photo: ", err)
+		http.NotFound(w, r)
 		return
 	}
 
-	if r.Method == "GET" {
-
-		photoID, _ := strconv.Atoi(mux.Vars(r)["photoid"])
-		photoName, _ := mux.Vars(r)["photoname"]
-		log.Println("Serving ", photoID, " ", photoName)
-
-		photoBytes, err := photo.FetchThumb(db, photoID, photoName)
-		if err != nil {
-			log.Fatal("Error: ", err)
-		}
-
-		w.Header().Set("Content-Type", "image/jpeg")
-		w.Header().Set("Content-Length", strconv.Itoa(len(*photoBytes)))
-		w.Write(*photoBytes)
-	}
+	w.Header().Set("Content-Type", "image/jpeg")
+	w.Header().Set("Content-Length", strconv.Itoa(len(*photoBytes)))
+	w.Write(*photoBytes)
 }

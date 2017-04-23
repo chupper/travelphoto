@@ -17,31 +17,31 @@ import (
 
 // Load the gallery routes
 func Load(r *mux.Router) {
-	r.HandleFunc("/gallery", galleryHandler)
-	r.HandleFunc("/gallery/create", createGalleryHandler)
-	r.HandleFunc("/gallery/{galleryid:[0-9]+}", editGalleryHandler)
+	r.HandleFunc("/gallery", galleryHandler).Methods(http.MethodGet, http.MethodPost)
+	r.HandleFunc("/gallery/create", createGalleryHandler).Methods(http.MethodGet)
+	r.HandleFunc("/gallery/{galleryid:[0-9]+}", editGalleryHandler).Methods(http.MethodGet, http.MethodPost)
 }
 
 func galleryHandler(w http.ResponseWriter, r *http.Request) {
 
-	db, err := controllers.DbConnection()
-	if err != nil {
-		log.Fatal("Connect fail: ", err)
-	}
+	db := controllers.DbConnection()
 
-	if r.Method == "GET" {
+	switch r.Method {
+	case http.MethodGet:
 
 		// get the galleries
 		galleries, err := gallery.Select(db)
 		if err != nil {
-			log.Fatal("Retrieve fail: ", err)
+			log.Println("Error retrieving galleies: ", err)
+			http.NotFound(w, r)
+			return
 		}
 
 		// retrieve all the items
 		t, _ := template.ParseFiles("views/base.tmpl", "views/gallery/index.tmpl")
 		t.Execute(w, galleries)
 
-	} else if r.Method == "POST" {
+	case http.MethodPost:
 
 		// creating the new gallery and the n photos related to the gallery
 		r.ParseForm()
@@ -49,9 +49,6 @@ func galleryHandler(w http.ResponseWriter, r *http.Request) {
 		galleryDescription := r.Form["description"][0]
 
 		galleryID := gallery.Create(db, galleryName, galleryDescription)
-		if err != nil {
-			log.Fatal("Create fail: ", err)
-		}
 
 		// create the photos for the gallery
 		for i := 1; i <= len(galleryName); i++ {
@@ -70,28 +67,30 @@ type editGallery struct {
 
 func editGalleryHandler(w http.ResponseWriter, r *http.Request) {
 
-	db, err := controllers.DbConnection()
-	if err != nil {
-		log.Fatal("Connect fail: ", err)
-	}
+	db := controllers.DbConnection()
 
 	var galleryID int
 	galleryID, _ = strconv.Atoi(mux.Vars(r)["galleryid"])
 
 	switch r.Method {
-	case "GET":
+	case http.MethodGet:
 
 		// populate the edit screen
-		gal, _ := gallery.Get(db, galleryID)
-		photos, _ := photo.GetPhotos(db, galleryID)
-		log.Println(photos)
+		gal, errGallery := gallery.Get(db, galleryID)
+		photos, errPhotos := photo.GetPhotos(db, galleryID)
+		if errGallery != nil || errPhotos != nil {
+			log.Println("Error retrieving gallery: ", errGallery, errPhotos)
+			http.NotFound(w, r)
+			return
+		}
+
 		t, _ := template.ParseFiles("views/base.tmpl", "views/gallery/edit.tmpl")
 		t.Execute(w, editGallery{
 			Gallery: *gal,
 			Photos:  *photos,
 		})
 
-	case "POST":
+	case http.MethodPost:
 
 		// updates the gallery
 		r.ParseForm()
@@ -112,9 +111,7 @@ func editGalleryHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func createGalleryHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method == "GET" {
-		// return the gallery
-		t, _ := template.ParseFiles("views/base.tmpl", "views/gallery/create.tmpl")
-		t.Execute(w, controllers.Page{})
-	}
+	// return the gallery
+	t, _ := template.ParseFiles("views/base.tmpl", "views/gallery/create.tmpl")
+	t.Execute(w, controllers.Page{})
 }

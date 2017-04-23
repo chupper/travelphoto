@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"fmt"
 
+	"log"
+
 	"github.com/chupper/travelphoto/models/photo"
 )
 
@@ -49,6 +51,7 @@ func Select(db Connection) (*[]Gallery, error) {
 	defer result.Close()
 
 	if err != nil {
+		log.Println("Error retrieving gallery: ", err)
 		return nil, err
 	}
 
@@ -72,7 +75,7 @@ func Select(db Connection) (*[]Gallery, error) {
 }
 
 // SelectAll Query for the homepage
-func SelectAll(db Connection) (*[]Gallery, error) {
+func SelectAll(db Connection) *[]Gallery {
 
 	result, err := db.Query(fmt.Sprintf(`
 		SELECT 
@@ -90,7 +93,7 @@ func SelectAll(db Connection) (*[]Gallery, error) {
 	defer result.Close()
 
 	if err != nil {
-		return nil, err
+		log.Fatal("Error retrieving SelectAll: ", err)
 	}
 
 	// not sure if this is a golang way?
@@ -136,7 +139,7 @@ func SelectAll(db Connection) (*[]Gallery, error) {
 		items = append(items, gallery)
 	}
 
-	return &items, err
+	return &items
 }
 
 // Get returns single gallery
