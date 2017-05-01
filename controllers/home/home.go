@@ -4,9 +4,9 @@ import (
 	"html/template"
 	"net/http"
 
-	"github.com/chupper/travelphoto/controllers"
 	"github.com/chupper/travelphoto/models/gallery"
 	"github.com/chupper/travelphoto/models/photo"
+	"github.com/chupper/travelphoto/shared/database"
 
 	"github.com/gorilla/mux"
 )
@@ -26,7 +26,7 @@ type homePage struct {
 }
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
-	db := controllers.DbConnection()
+	db := database.DbConnection()
 	galleries := gallery.SelectAll(db)
 
 	t, _ := template.ParseFiles("views/home/home.tmpl")

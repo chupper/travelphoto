@@ -11,20 +11,22 @@ import (
 	_ "github.com/lib/pq"
 
 	"github.com/chupper/travelphoto/controllers"
+	"github.com/chupper/travelphoto/middleware/authentication"
 	"github.com/chupper/travelphoto/models/gallery"
 	"github.com/chupper/travelphoto/models/photo"
+	"github.com/chupper/travelphoto/shared/database"
 )
 
 // Load the gallery routes
 func Load(r *mux.Router) {
-	r.HandleFunc("/gallery", galleryHandler).Methods(http.MethodGet, http.MethodPost)
-	r.HandleFunc("/gallery/create", createGalleryHandler).Methods(http.MethodGet)
-	r.HandleFunc("/gallery/{galleryid:[0-9]+}", editGalleryHandler).Methods(http.MethodGet, http.MethodPost)
+	r.Handle("/gallery", authentication.Authenticated(http.HandlerFunc(galleryHandler))).Methods(http.MethodGet, http.MethodPost)
+	r.Handle("/gallery/create", authentication.Authenticated(http.HandlerFunc(createGalleryHandler))).Methods(http.MethodGet)
+	r.Handle("/gallery/{galleryid:[0-9]+}", authentication.Authenticated(http.HandlerFunc(editGalleryHandler))).Methods(http.MethodGet, http.MethodPost)
 }
 
 func galleryHandler(w http.ResponseWriter, r *http.Request) {
 
-	db := controllers.DbConnection()
+	db := database.DbConnection()
 
 	switch r.Method {
 	case http.MethodGet:
@@ -32,7 +34,7 @@ func galleryHandler(w http.ResponseWriter, r *http.Request) {
 		// get the galleries
 		galleries, err := gallery.Select(db)
 		if err != nil {
-			log.Println("Error retrieving galleies: ", err)
+			log.Println("Error retrieving galleries: ", err)
 			http.NotFound(w, r)
 			return
 		}
@@ -45,8 +47,8 @@ func galleryHandler(w http.ResponseWriter, r *http.Request) {
 
 		// creating the new gallery and the n photos related to the gallery
 		r.ParseForm()
-		galleryName := r.Form["name"][0]
-		galleryDescription := r.Form["description"][0]
+		galleryName := r.PostFormValue("name")
+		galleryDescription := r.PostFormValue("description")
 
 		galleryID := gallery.Create(db, galleryName, galleryDescription)
 
@@ -56,7 +58,7 @@ func galleryHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// after successful create we redirect to the galleries
-		http.Redirect(w, r, "/gallery", 301)
+		http.Redirect(w, r, "/gallery", http.StatusFound)
 	}
 }
 
@@ -67,7 +69,7 @@ type editGallery struct {
 
 func editGalleryHandler(w http.ResponseWriter, r *http.Request) {
 
-	db := controllers.DbConnection()
+	db := database.DbConnection()
 
 	var galleryID int
 	galleryID, _ = strconv.Atoi(mux.Vars(r)["galleryid"])
@@ -94,19 +96,19 @@ func editGalleryHandler(w http.ResponseWriter, r *http.Request) {
 
 		// updates the gallery
 		r.ParseForm()
-		galleryName := r.Form["name"]
-		galleryDescription := r.Form["description"]
+		galleryName := r.PostFormValue("name")
+		galleryDescription := r.PostFormValue("description")
 
 		galleryUpdate := gallery.Gallery{
 			ID:          galleryID,
-			Name:        galleryName[0],
-			Description: galleryDescription[0],
+			Name:        galleryName,
+			Description: galleryDescription,
 		}
 
 		gallery.Update(db, galleryUpdate)
 
 		// redirect back to gallery
-		http.Redirect(w, r, fmt.Sprint("/gallery/", galleryID), 301)
+		http.Redirect(w, r, fmt.Sprint("/gallery/", galleryID), http.StatusFound)
 	}
 }
 

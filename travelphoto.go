@@ -7,19 +7,38 @@ import (
 
 	"github.com/chupper/travelphoto/controllers/gallery"
 	"github.com/chupper/travelphoto/controllers/home"
+	"github.com/chupper/travelphoto/controllers/login"
 	"github.com/chupper/travelphoto/controllers/photo"
+	"github.com/chupper/travelphoto/shared/database"
+	"github.com/chupper/travelphoto/shared/session"
 
 	"github.com/gorilla/mux"
+	"github.com/gorilla/sessions"
 )
 
 func main() {
-	// start the webserver
+	// set up the session store
+	session.Configure(session.Session{
+		Options: sessions.Options{
+			MaxAge: 1200,
+			//Secure:   true,
+			HttpOnly: true,
+		},
+		Name:      "TravelPhoto",
+		SecretKey: "thisistopsecret",
+	})
+
+	// setup the database
+	database.Configure(database.DbConfig{})
+
+	// set up routes
 	r := mux.NewRouter()
 
 	// loading the routes
 	home.Load(r)
 	gallery.Load(r)
 	photo.Load(r)
+	login.Load(r)
 
 	// serve the static folder
 	s := http.StripPrefix("/static/", http.FileServer(http.Dir("./static/")))

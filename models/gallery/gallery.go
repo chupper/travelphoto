@@ -1,12 +1,12 @@
 package gallery
 
 import (
-	"database/sql"
 	"fmt"
 
 	"log"
 
 	"github.com/chupper/travelphoto/models/photo"
+	"github.com/chupper/travelphoto/shared/database"
 )
 
 const (
@@ -21,15 +21,8 @@ type Gallery struct {
 	Photos      []photo.Photo
 }
 
-// Connection is an interface for making the queries
-type Connection interface {
-	Exec(query string, args ...interface{}) (sql.Result, error)
-	Query(query string, args ...interface{}) (*sql.Rows, error)
-	QueryRow(query string, args ...interface{}) *sql.Row
-}
-
 // Create adds a gallery
-func Create(db Connection, name string, description string) int {
+func Create(db database.Connection, name string, description string) int {
 	var id int
 	result := db.QueryRow(fmt.Sprintf(`
 		INSERT INTO %v (name, description, show)
@@ -42,7 +35,7 @@ func Create(db Connection, name string, description string) int {
 }
 
 // Select returns all the galleries
-func Select(db Connection) (*[]Gallery, error) {
+func Select(db database.Connection) (*[]Gallery, error) {
 
 	result, err := db.Query(fmt.Sprintf(`
 		SELECT ID, NAME, DESCRIPTION
@@ -75,7 +68,7 @@ func Select(db Connection) (*[]Gallery, error) {
 }
 
 // SelectAll Query for the homepage
-func SelectAll(db Connection) *[]Gallery {
+func SelectAll(db database.Connection) *[]Gallery {
 
 	result, err := db.Query(fmt.Sprintf(`
 		SELECT 
@@ -143,7 +136,7 @@ func SelectAll(db Connection) *[]Gallery {
 }
 
 // Get returns single gallery
-func Get(db Connection, galleryID int) (*Gallery, error) {
+func Get(db database.Connection, galleryID int) (*Gallery, error) {
 
 	result, err := db.Query(fmt.Sprintf(`
 		SELECT ID, NAME, DESCRIPTION
@@ -170,7 +163,7 @@ func Get(db Connection, galleryID int) (*Gallery, error) {
 }
 
 // Update updates the table
-func Update(db Connection, gallery Gallery) error {
+func Update(db database.Connection, gallery Gallery) error {
 
 	_, err := db.Exec(fmt.Sprintf(`
 		UPDATE %v SET

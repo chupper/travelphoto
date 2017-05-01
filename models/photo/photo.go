@@ -1,9 +1,10 @@
 package photo
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
+
+	"github.com/chupper/travelphoto/shared/database"
 )
 
 // Photo image in the gallery
@@ -23,15 +24,8 @@ const (
 	table = "photo"
 )
 
-// Connection is an interface for making the queries
-type Connection interface {
-	Exec(query string, args ...interface{}) (sql.Result, error)
-	Query(query string, args ...interface{}) (*sql.Rows, error)
-	QueryRow(query string, args ...interface{}) *sql.Row
-}
-
 // Create adds a new photo for the gallery
-func Create(db Connection, name string, description string, galleryID int) int {
+func Create(db database.Connection, name string, description string, galleryID int) int {
 	var id int
 	result := db.QueryRow(fmt.Sprintf(`
 		INSERT INTO %v (name, description, galleryId, thumbfilename, filename)
@@ -44,7 +38,7 @@ func Create(db Connection, name string, description string, galleryID int) int {
 }
 
 // GetPhotos get photos for specific gallery
-func GetPhotos(db Connection, galleryID int) (*[]Photo, error) {
+func GetPhotos(db database.Connection, galleryID int) (*[]Photo, error) {
 
 	results, err := db.Query(fmt.Sprintf(`
 		SELECT
@@ -87,7 +81,7 @@ func GetPhotos(db Connection, galleryID int) (*[]Photo, error) {
 }
 
 // UpdatePhoto updates the main photo
-func UpdatePhoto(db Connection, photoID int, fileName string, photoBytes *[]byte) {
+func UpdatePhoto(db database.Connection, photoID int, fileName string, photoBytes *[]byte) {
 	db.Exec(fmt.Sprintf(`
 		UPDATE %v SET
 			IMAGE = $1,
@@ -97,7 +91,7 @@ func UpdatePhoto(db Connection, photoID int, fileName string, photoBytes *[]byte
 }
 
 // UpdateThumb updates the thumbnail
-func UpdateThumb(db Connection, photoID int, fileName string, photoBytes *[]byte) {
+func UpdateThumb(db database.Connection, photoID int, fileName string, photoBytes *[]byte) {
 	db.Exec(fmt.Sprintf(`
 		UPDATE %v SET
 			Thumb = $1,
@@ -107,7 +101,7 @@ func UpdateThumb(db Connection, photoID int, fileName string, photoBytes *[]byte
 }
 
 // FetchPhoto the photo bytes
-func FetchPhoto(db Connection, photoID int, photoName string) (*[]byte, error) {
+func FetchPhoto(db database.Connection, photoID int, photoName string) (*[]byte, error) {
 
 	results, err := db.Query(fmt.Sprintf(`
 		SELECT
@@ -134,7 +128,7 @@ func FetchPhoto(db Connection, photoID int, photoName string) (*[]byte, error) {
 }
 
 // FetchThumb serve the thumbnail
-func FetchThumb(db Connection, photoID int, photoName string) (*[]byte, error) {
+func FetchThumb(db database.Connection, photoID int, photoName string) (*[]byte, error) {
 
 	results, err := db.Query(fmt.Sprintf(`
 		SELECT

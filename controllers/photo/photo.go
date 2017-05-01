@@ -7,8 +7,9 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/chupper/travelphoto/controllers"
+	"github.com/chupper/travelphoto/middleware/authentication"
 	"github.com/chupper/travelphoto/models/photo"
+	"github.com/chupper/travelphoto/shared/database"
 	"github.com/gorilla/mux"
 )
 
@@ -16,12 +17,14 @@ import (
 func Load(r *mux.Router) {
 	r.HandleFunc("/galleryphoto/{photoid:[0-9]+}/{photoname:[A-Z|a-z|0-9|.|_]+}", servePhoto).Methods(http.MethodGet)
 	r.HandleFunc("/gallerythumb/{photoid:[0-9]+}/{photoname:[A-Z|a-z|0-9|.|_]+}", serveThumbnail).Methods(http.MethodGet)
-	r.HandleFunc("/photo/{photoid:[0-9]+}", editPhoto).Methods(http.MethodPost)
+
+	// only authenticated can edit the photos
+	r.Handle("/photo/{photoid:[0-9]+}", authentication.Authenticated(http.HandlerFunc(editPhoto))).Methods(http.MethodPost)
 }
 
 func editPhoto(w http.ResponseWriter, r *http.Request) {
 
-	db := controllers.DbConnection()
+	db := database.DbConnection()
 
 	var photoID int
 	photoID, _ = strconv.Atoi(mux.Vars(r)["photoid"])
@@ -65,7 +68,7 @@ func readImage(r *http.Request, name string) ([]byte, string, error) {
 
 func servePhoto(w http.ResponseWriter, r *http.Request) {
 
-	db := controllers.DbConnection()
+	db := database.DbConnection()
 
 	photoID, _ := strconv.Atoi(mux.Vars(r)["photoid"])
 	photoName, _ := mux.Vars(r)["photoname"]
@@ -84,7 +87,7 @@ func servePhoto(w http.ResponseWriter, r *http.Request) {
 
 func serveThumbnail(w http.ResponseWriter, r *http.Request) {
 
-	db := controllers.DbConnection()
+	db := database.DbConnection()
 
 	photoID, _ := strconv.Atoi(mux.Vars(r)["photoid"])
 	photoName, _ := mux.Vars(r)["photoname"]
